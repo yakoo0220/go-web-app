@@ -11,9 +11,13 @@
         <form method="POST" action="/">
             <h2>Login</h2>
             <label for="activationCode">Activation Code:</label>
-            <input type="text" id="activationCode" name="activationCode" required>
+            <input type="text" id="activationCode" name="activationCode" required value="{{.Code}}">
+            {{if .Error}}
+            <div id="error" style="color: red;">{{.Error}}</div>
+            {{end}}
             <button type="submit">Login</button>
         </form>
+        <div id="status"></div>
     </div>
     <script>
         window.onload = function() {

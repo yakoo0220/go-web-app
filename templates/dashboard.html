@@ -8,15 +8,65 @@
 </head>
 <body>
     <div class="container">
-        <h2>Welcome</h2>
-        <form method="POST" action="/dashboard">
-            <label for="userInput">Enter something:</label>
-            <input type="text" id="userInput" name="userInput" required>
+        <h2>Register</h2>
+        <form id="registrationForm">
+            <label for="username">Email:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required>
             <button type="submit">Submit</button>
         </form>
-        {{if .}}
-        <div id="result">You entered: {{.}}</div>
-        {{end}}
+        <div id="error" style="color: red;"></div>
     </div>
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('error');
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+
+            if (!emailPattern.test(username)) {
+                errorDiv.textContent = 'Invalid email address';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                return;
+            }
+
+            if (!passwordPattern.test(password)) {
+                errorDiv.textContent = 'Password must be at least 8 characters long and include uppercase, lowercase letters, numbers, and symbols';
+                return;
+            }
+
+            errorDiv.textContent = '';
+
+            fetch('/dashboard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    response.text().then(text => {
+                        errorDiv.textContent = text;
+                    });
+                }
+            }).catch(error => {
+                errorDiv.textContent = 'An error occurred';
+            });
+        });
+    </script>
 </body>
 </html>

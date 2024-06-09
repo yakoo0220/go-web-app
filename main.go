@@ -12,8 +12,12 @@ import (
 )
 
 var (
-	templates = template.Must(template.ParseFiles("templates/login.html", "templates/dashboard.html"))
-	db        *sql.DB
+	templates = template.Must(template.ParseFiles(
+		"templates/login.html",
+		"templates/dashboard.html",
+		"templates/admin.html",
+	))
+	db *sql.DB
 )
 
 func main() {
@@ -26,6 +30,8 @@ func main() {
 
 	http.HandleFunc("/", loginHandler)
 	http.HandleFunc("/dashboard", dashboardHandler)
+	http.HandleFunc("/admin", adminHandler)
+	http.HandleFunc("/audit", auditHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -82,6 +88,63 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.ExecuteTemplate(w, "dashboard.html", nil)
+}
+
+func adminHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT code, email, password, isaudit FROM activation_codes")
+	if err != nil {
+		http.Error(w, "Failed to query database", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var activationCodes []struct {
+		Code     string
+		Email    string
+		Password string
+		IsAudit  bool
+	}
+
+	for rows.Next() {
+		var code, email, password string
+		var isaudit bool
+		if err := rows.Scan(&code, &email, &password, &isaudit); err != nil {
+			http.Error(w, "Failed to scan row", http.StatusInternalServerError)
+			return
+		}
+		activationCodes = append(activationCodes, struct {
+			Code     string
+			Email    string
+			Password string
+			IsAudit  bool
+		}{
+			Code:     code,
+			Email:    email,
+			Password: password,
+			IsAudit:  isaudit,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Failed to iterate over rows", http.StatusInternalServerError)
+		return
+	}
+
+	templates.ExecuteTemplate(w, "admin.html", activationCodes)
+}
+
+func auditHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		code := r.FormValue("code")
+		_, err := db.Exec("UPDATE activation_codes SET isaudit = TRUE WHERE code = ?", code)
+		if err != nil {
+			http.Error(w, "Failed to update database", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+	} else {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	}
 }
 
 func isValidEmail(email string) bool {

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Admin - Activation Codes</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Activation Code</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th>Audit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .}}
+                <tr>
+                    <td>{{.Code}}</td>
+                    <td>{{.Email}}</td>
+                    <td>{{.Password}}</td>
+                    <td>
+                        {{if .IsAudit}}
+                        Audited
+                        {{else}}
+                        <form method="POST" action="/audit">
+                            <input type="hidden" name="code" value="{{.Code}}">
+                            <button type="submit">Confirm Audit</button>
+                        </form>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

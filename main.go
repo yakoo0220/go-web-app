@@ -108,7 +108,7 @@ func saveUserCredentialsAndMarkUsed(activationCode, username, password string) b
 	}
 
 	now := time.Now()
-	_, err = tx.Exec("UPDATE activation_codes SET email = ?, password = ?, used = TRUE, registration_time = ?, login_time = ? WHERE code = ?", username, password, now, now, activationCode)
+	_, err = tx.Exec("UPDATE activation_codes SET email = ?, password = ?, used = TRUE, registration_time = ? WHERE code = ?", username, password, now, activationCode)
 	if err != nil {
 		log.Println("Error updating user credentials:", err)
 		tx.Rollback()
@@ -132,7 +132,7 @@ func validateAndMarkLogin(code string) bool {
 	}
 
 	var count int
-	err = tx.QueryRow("SELECT COUNT(*) FROM activation_codes WHERE code = ? AND used = FALSE AND islogin = FALSE", code).Scan(&count)
+	err = tx.QueryRow("SELECT COUNT(*) FROM activation_codes WHERE code = ? AND used = FALSE", code).Scan(&count)
 	if err != nil {
 		log.Println("Error querying database:", err)
 		tx.Rollback()

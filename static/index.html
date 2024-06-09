@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英达数科代注册系统</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">英达数科代注册系统</h2>
+        <form id="infoForm">
+            <div class="form-group">
+                <label for="input1">激活码</label>
+                <input type="text" class="form-control" id="input1" name="input1" required>
+            </div>
+            <div class="form-group">
+                <label for="input2">需要注册的邮箱</label>
+                <input type="email" class="form-control" id="input2" name="input2" placeholder="支持各类国内外邮箱" required>
+                <div class="invalid-feedback">请输入有效的邮箱地址。</div>
+            </div>
+            <div class="form-group">
+                <label for="input3">密码</label>
+                <input type="password" class="form-control" id="input3" name="input3" placeholder="大于8位大小写字母和数字" required>
+                <div class="invalid-feedback">密码必须大于8位，小于15位，包含大写字母、小写字母和数字。</div>
+            </div>
+            <div class="form-group">
+                <label for="selectMenu">区域选择</label>
+                <select class="form-control" id="selectMenu" name="selectMenu" required>
+                    <option value="">请选择一个区域</option>
+                    <option value="option1">中国区</option>
+                    <option value="option2">香港区</option>
+                    <option value="option3">日本区</option>
+                    <option value="option4">新加坡区</option>
+                    <option value="option5">其他区联系客服</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">立即提交</button>
+        </form>
+    </div>
+
+    <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const activationCode = getQueryParam('activation_code');
+            if (activationCode) {
+                document.getElementById('input1').value = activationCode;
+            }
+        });
+
+        function validatePassword(password) {
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,15}$/;
+            return regex.test(password);
+        }
+
+        document.getElementById('infoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let isValid = true;
+
+            const emailInput = document.getElementById('input2');
+            if (!emailInput.checkValidity()) {
+                emailInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                emailInput.classList.remove('is-invalid');
+            }
+
+            const passwordInput = document.getElementById('input3');
+            if (!validatePassword(passwordInput.value)) {
+                passwordInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                passwordInput.classList.remove('is-invalid');
+            }
+
+            if (isValid) {
+                let formData = new FormData(this);
+
+                fetch('/submit', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('提交成功：客服正在处理中，请关注聊天消息！');
+                    } else {
+                        alert('提交失败: 激活码似乎无效或者已被使用');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    </script>
+</body>
+</html>
